@@ -43,3 +43,13 @@ async def ping():
 @app.get("/api/position")
 async def get_latest():
     return latest_position or {"status": "no_data_yet"}
+
+# ====================== NOUVELLE ROUTE ======================
+@app.delete("/api/positions/clear")
+async def clear_all_positions():
+    """Supprime toutes les positions enregistrées (latest + historique)"""
+    global latest_position, positions_history
+    latest_position = None
+    positions_history.clear()
+    print("🗑️ Toutes les positions ont été supprimées")
+    return {"status": "success", "message": "Toutes les positions ont été supprimées"}
