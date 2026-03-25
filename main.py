@@ -15,15 +15,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ====================== STOCKAGE ======================
 latest_position = None
+positions_history = []  # ✅ FIX ajouté
+
+# ====================== ROUTES ======================
 
 @app.post("/api/position")
 async def receive_position(data: dict):
-    global latest_position
+    global latest_position, positions_history
     data["timestamp"] = datetime.utcnow().isoformat()
+    
     latest_position = data
+    positions_history.append(data)
+
     print(f"✅ Position reçue → Lat: {data.get('lat')}, Lon: {data.get('lon')}")
     return {"status": "ok"}
+
 
 @app.get("/api/position-stream")
 async def position_stream(request: Request):
@@ -34,22 +42,35 @@ async def position_stream(request: Request):
             if latest_position:
                 yield f"data: {json.dumps(latest_position)}\n\n"
             await asyncio.sleep(1)
+
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-@app.get("/ping")
+
+# ✅ FIX PRINCIPAL : support GET + HEAD
+@app.api_route("/ping", methods=["GET", "HEAD"])
 async def ping():
-    return {"status": "alive", "time": datetime.utcnow().isoformat()}
+    return {
+        "status": "alive",
+        "time": datetime.utcnow().isoformat()
+    }
+
 
 @app.get("/api/position")
 async def get_latest():
     return latest_position or {"status": "no_data_yet"}
 
-# ====================== NOUVELLE ROUTE ======================
+
+# ====================== ADMIN ======================
+
 @app.delete("/api/positions/clear")
 async def clear_all_positions():
-    """Supprime toutes les positions enregistrées (latest + historique)"""
     global latest_position, positions_history
+
     latest_position = None
     positions_history.clear()
+
     print("🗑️ Toutes les positions ont été supprimées")
-    return {"status": "success", "message": "Toutes les positions ont été supprimées"}
+    return {
+        "status": "success",
+        "message": "Toutes les positions ont été supprimées"
+    }
