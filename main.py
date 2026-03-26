@@ -38,6 +38,10 @@ async def receive_position(data: dict):
     print(f"✅ Position reçue → Lat: {data.get('lat')}, Lon: {data.get('lon')}")
     return {"status": "ok"}
 
+@app.get("/api/position")
+async def get_latest():
+    return latest_position or {"status": "no_data_yet"}
+
 @app.get("/api/position-stream")
 async def position_stream(request: Request):
     async def event_generator():
