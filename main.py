@@ -61,14 +61,12 @@ async def get_latest():
 
 
 # ====================== ADMIN ======================
-
 @app.delete("/api/positions/clear")
+@app.get("/api/positions/clear")          # ← Ajout pour faciliter les tests
 async def clear_all_positions():
     global latest_position, positions_history
-
     latest_position = None
     positions_history.clear()
-
     print("🗑️ Toutes les positions ont été supprimées")
     return {
         "status": "success",
