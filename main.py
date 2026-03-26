@@ -61,14 +61,29 @@ async def get_latest():
 
 
 # ====================== ADMIN ======================
+from fastapi import HTTPException, Query
+
+# Mot de passe de protection (change-le par quelque chose de plus fort !)
+CLEAR_PASSWORD = "UltimateIA_ntm"   # ← À modifier selon ce que tu veux
+
 @app.delete("/api/positions/clear")
-@app.get("/api/positions/clear")          # ← Ajout pour faciliter les tests
-async def clear_all_positions():
+@app.get("/api/positions/clear")   # On garde GET pour faciliter les tests
+async def clear_all_positions(password: str = Query(..., description="Mot de passe requis pour effacer les positions")):
+    """Supprime toutes les positions seulement si le bon mot de passe est fourni"""
+    
+    if password != CLEAR_PASSWORD:
+        raise HTTPException(
+            status_code=401,
+            detail="Mot de passe incorrect. Accès refusé."
+        )
+    
     global latest_position, positions_history
     latest_position = None
     positions_history.clear()
-    print("🗑️ Toutes les positions ont été supprimées")
+    
+    print("🗑️ Toutes les positions ont été supprimées (mot de passe validé)")
+    
     return {
         "status": "success",
-        "message": "Toutes les positions ont été supprimées"
+        "message": "Toutes les positions ont été supprimées avec succès."
     }
