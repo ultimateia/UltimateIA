@@ -54,6 +54,17 @@ async def position_stream(request: Request):
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
+# ====================== NOUVELLE ROUTE : HISTORIQUE ======================
+@app.get("/api/positions/history")
+async def get_positions_history():
+    """Retourne tout l'historique des positions pour recharger le trajet au refresh"""
+    if not positions_history:
+        return {"positions": []}
+    
+    return {
+        "positions": positions_history,
+        "count": len(positions_history)
+    }
 
 # ✅ FIX PRINCIPAL : support GET + HEAD
 @app.api_route("/ping", methods=["GET", "HEAD"])
