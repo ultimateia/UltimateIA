@@ -100,23 +100,21 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
    
     global latest_position, positions_history, events
     
-    # 🔥 Nettoyage complet
+    # Nettoyage complet
     latest_position = None
     positions_history.clear()
     
-    # On vide complètement la liste des événements
+    # 🔥 SOLUTION : On vide complètement les events ET on ajoute un nouveau clear
     events.clear()
-    
-    # Optionnel : on ajoute quand même un événement "clear" pour notifier les clients déjà connectés
     events.append({
         "type": "clear",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().timestamp()   # timestamp pour éviter les doublons
     })
     
-    print("🗑️ Toutes les positions ont été supprimées et events nettoyés")
+    print("🗑️ Clear effectué - events vidés et nouveau clear ajouté")
     
     return {
         "status": "success",
         "message": "Toutes les positions ont été supprimées avec succès.",
-        "events_cleared": True
+        "cleared": True
     }
