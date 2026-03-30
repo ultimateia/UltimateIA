@@ -90,9 +90,10 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
     positions_history.clear()
     
     print("🗑️ Toutes les positions ont été supprimées")
-    
-    return {
-        "status": "success",
-        "message": "Toutes les positions ont été supprimées avec succès.",
-        "type": "clear"
-    }
+                    
+    return StreamingResponse(f"data: {json.dumps({'type': 'clear', 'data': "positions cleared"})}\n\n", media_type="text/event-stream")
+    # return {
+    #     "status": "success",
+    #     "message": "Toutes les positions ont été supprimées avec succès.",
+    #     "type": "clear"
+    # }
