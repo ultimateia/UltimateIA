@@ -27,13 +27,16 @@ if not CLEAR_PASSWORD:
 latest_position = None
 positions_history = []
 
+# Variable pour forcer l'envoi d'un clear dans le stream
+clear_pending = False
+
 @app.post("/api/position")
 async def receive_position(data: dict):
     global latest_position
     data["timestamp"] = datetime.utcnow().isoformat()
     latest_position = data
     positions_history.append(data)
-    
+   
     print(f"✅ Position reçue → Lat: {data.get('lat')}, Lon: {data.get('lon')}")
     return {"status": "ok"}
 
@@ -43,22 +46,32 @@ async def get_latest():
     return latest_position or {"status": "no_data_yet"}
 
 
-# ====================== STREAM SIMPLE (comme avant) ======================
+# ====================== STREAM SIMPLE ======================
 @app.get("/api/position-stream")
 async def position_stream(request: Request):
+    global clear_pending
+    
     async def event_generator():
+        global clear_pending
         while True:
             if await request.is_disconnected():
                 break
             
-            # Envoie TOUJOURS la dernière position connue (en boucle)
+            # Si un clear est en attente, on l'envoie en priorité
+            if clear_pending:
+                yield f"data: {json.dumps({'type': 'clear'})}\n\n"
+                clear_pending = False
+                await asyncio.sleep(0.5)  # petite pause pour bien séparer
+                continue
+            
+            # Envoi normal de la dernière position en boucle
             if latest_position:
                 yield f"data: {json.dumps({'type': 'position', 'data': latest_position})}\n\n"
             else:
                 yield f"data: {json.dumps({'type': 'no_data'})}\n\n"
             
-            await asyncio.sleep(1)   # Envoi toutes les secondes
-    
+            await asyncio.sleep(1)
+   
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
@@ -81,19 +94,19 @@ async def ping():
 async def clear_all_positions(password: str = Query(..., description="Mot de passe requis")):
     if not CLEAR_PASSWORD:
         raise HTTPException(status_code=500, detail="Configuration du mot de passe manquante")
-   
+  
     if password != CLEAR_PASSWORD:
         raise HTTPException(status_code=401, detail="Mot de passe incorrect")
-   
-    global latest_position, positions_history
+  
+    global latest_position, positions_history, clear_pending
+    
     latest_position = None
     positions_history.clear()
+    clear_pending = True   # ← On signale qu'il faut envoyer un "clear" dans le stream
     
-    print("🗑️ Toutes les positions ont été supprimées")
-                    
-    return StreamingResponse(f"data: {json.dumps({'type': 'clear', 'data': "positions cleared"})}\n\n", media_type="text/event-stream")
-    # return {
-    #     "status": "success",
-    #     "message": "Toutes les positions ont été supprimées avec succès.",
-    #     "type": "clear"
-    # }
+    print("🗑️ Clear effectué - Signal envoyé dans le position-stream")
+    
+    return {
+        "status": "success",
+        "message": "Toutes les positions ont été supprimées avec succès."
+    }
