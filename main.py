@@ -93,5 +93,6 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
     
     return {
         "status": "success",
-        "message": "Toutes les positions ont été supprimées avec succès."
+        "message": "Toutes les positions ont été supprimées avec succès.",
+        "type": "clear"
     }
