@@ -94,22 +94,29 @@ async def ping():
 async def clear_all_positions(password: str = Query(..., description="Mot de passe requis")):
     if not CLEAR_PASSWORD:
         raise HTTPException(status_code=500, detail="Configuration du mot de passe manquante sur le serveur")
-    
+   
     if password != CLEAR_PASSWORD:
         raise HTTPException(status_code=401, detail="Mot de passe incorrect. Accès refusé.")
+   
+    global latest_position, positions_history, events
     
-    global latest_position, positions_history
+    # 🔥 Nettoyage complet
     latest_position = None
     positions_history.clear()
-
-    # 🔥 Ajouter événement CLEAR pour le stream
+    
+    # On vide complètement la liste des événements
+    events.clear()
+    
+    # Optionnel : on ajoute quand même un événement "clear" pour notifier les clients déjà connectés
     events.append({
-        "type": "clear"
+        "type": "clear",
+        "timestamp": datetime.utcnow().isoformat()
     })
-
-    print("🗑️ Toutes les positions ont été supprimées (mot de passe validé)")
-
+    
+    print("🗑️ Toutes les positions ont été supprimées et events nettoyés")
+    
     return {
         "status": "success",
-        "message": "Toutes les positions ont été supprimées avec succès."
+        "message": "Toutes les positions ont été supprimées avec succès.",
+        "events_cleared": True
     }
