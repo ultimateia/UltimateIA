@@ -104,12 +104,12 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
     latest_position = None
     positions_history.clear()
     
-    # 🔥 SOLUTION : On vide complètement les events ET on ajoute un nouveau clear
-    events.clear()
     events.append({
         "type": "clear",
         "timestamp": datetime.utcnow().timestamp()   # timestamp pour éviter les doublons
     })
+    
+    events.clear()
     
     print("🗑️ Clear effectué - events vidés et nouveau clear ajouté")
     
