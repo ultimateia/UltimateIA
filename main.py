@@ -110,3 +110,40 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
         "status": "success",
         "message": "Toutes les positions ont été supprimées avec succès."
     }
+
+# ====================== NOTIFICATIONS STREAM ======================
+notifications = []  # Liste des notifications en mémoire
+
+class Notification(BaseModel):
+    type: str
+    message: str
+    timestamp: str = None
+
+@app.post("/api/notifications")
+async def send_notification(notif: Notification):
+    """Endpoint pour envoyer une notification depuis le Raspberry ou ailleurs"""
+    if not notif.timestamp:
+        notif.timestamp = datetime.utcnow().isoformat()
+    
+    notifications.append(notif.dict())
+    print(f"🔔 Notification envoyée : {notif.message}")
+    return {"status": "sent"}
+
+@app.get("/api/notifications-stream")
+async def notifications_stream(request: Request):
+    """Nouveau flux SSE dédié aux notifications"""
+    async def event_generator():
+        last_index = 0
+        while True:
+            if await request.is_disconnected():
+                break
+            
+            # Envoie les nouvelles notifications
+            while last_index < len(notifications):
+                notif = notifications[last_index]
+                yield f"data: {json.dumps(notif)}\n\n"
+                last_index += 1
+            
+            await asyncio.sleep(0.5)
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
