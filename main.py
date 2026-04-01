@@ -113,38 +113,30 @@ async def clear_all_positions(password: str = Query(..., description="Mot de pas
     }
 
 # ====================== NOTIFICATIONS STREAM ======================
-notifications = []  # Liste des notifications en mémoire
-
-class Notification(BaseModel):
-    type: str
-    message: str
-    timestamp: str = None
+notifications = []  # Liste des notifications
 
 @app.post("/api/notifications")
-async def send_notification(notif: Notification):
-    """Endpoint pour envoyer une notification depuis le Raspberry ou ailleurs"""
-    if not notif.timestamp:
-        notif.timestamp = datetime.utcnow().isoformat()
+async def send_notification(notif: dict):   # On accepte dict pour plus de simplicité
+    notif["timestamp"] = datetime.utcnow().isoformat()
+    notifications.append(notif)
     
-    notifications.append(notif.dict())
-    print(f"🔔 Notification envoyée : {notif.message}")
+    print(f"🔔 Notification envoyée : {notif.get('message')}")
     return {"status": "sent"}
+
 
 @app.get("/api/notifications-stream")
 async def notifications_stream(request: Request):
-    """Nouveau flux SSE dédié aux notifications"""
     async def event_generator():
         last_index = 0
         while True:
             if await request.is_disconnected():
                 break
             
-            # Envoie les nouvelles notifications
+            # Envoie toutes les nouvelles notifications
             while last_index < len(notifications):
-                notif = notifications[last_index]
-                yield f"data: {json.dumps(notif)}\n\n"
+                yield f"data: {json.dumps(notifications[last_index])}\n\n"
                 last_index += 1
             
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.5)   # Vérification rapide
     
     return StreamingResponse(event_generator(), media_type="text/event-stream")
