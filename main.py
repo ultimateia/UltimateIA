@@ -93,7 +93,7 @@ async def send_notification(notif: dict):
 async def notifications_stream(request: Request):
     global notification_clear_pending
     
-    async def event_generator():
+    async def event_generator_notif():
         global notification_clear_pending
         while True:
             if await request.is_disconnected():
@@ -113,7 +113,7 @@ async def notifications_stream(request: Request):
             
             await asyncio.sleep(1)
    
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(event_generator_notif(), media_type="text/event-stream")
 
 
 @app.get("/api/positions/history")
