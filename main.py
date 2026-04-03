@@ -89,31 +89,33 @@ async def send_notification(notif: dict):
     return {"status": "sent"}
 
 
+# ====================== STREAM NOTIFICATIONS ======================
 @app.get("/api/notifications-stream")
 async def notifications_stream(request: Request):
     global notification_clear_pending
-    
-    async def event_generator_notif():
+   
+    async def event_generator():
         global notification_clear_pending
         while True:
             if await request.is_disconnected():
                 break
-            
-            # Si un clear est en attente, on l'envoie en priorité
+           
+            # Priorité au clear
             if notification_clear_pending:
                 yield f"data: {json.dumps({'type': 'clear'})}\n\n"
                 notification_clear_pending = False
                 await asyncio.sleep(0.5)
                 continue
-            
+           
+            # Envoi normal de la dernière notification
             if latest_notification:
                 yield f"data: {json.dumps(latest_notification)}\n\n"
             else:
                 yield f"data: {json.dumps({'type': 'no_notification'})}\n\n"
-            
+           
             await asyncio.sleep(1)
-   
-    return StreamingResponse(event_generator_notif(), media_type="text/event-stream")
+  
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.get("/api/positions/history")
