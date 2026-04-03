@@ -30,8 +30,6 @@ latest_notification = None
 
 # Variable pour gérer le clear dans le stream
 clear_pending = False
-notification_clear_pending = False
-
 
 @app.post("/api/position")
 async def receive_position(data: dict):
@@ -92,20 +90,11 @@ async def send_notification(notif: dict):
 # ====================== STREAM NOTIFICATIONS ======================
 @app.get("/api/notifications-stream")
 async def notifications_stream(request: Request):
-    global notification_clear_pending
    
     async def event_generator():
-        global notification_clear_pending
         while True:
             if await request.is_disconnected():
                 break
-           
-            # Priorité au clear
-            if notification_clear_pending:
-                yield f"data: {json.dumps({'type': 'clear'})}\n\n"
-                notification_clear_pending = False
-                await asyncio.sleep(0.5)
-                continue
            
             # Envoi normal de la dernière notification
             if latest_notification:
@@ -166,12 +155,10 @@ async def clear_all_notifications(password: str = Query(..., description="Mot de
     global latest_notification
     
     latest_notification = None
-    notification_clear_pending = True
     
     print("🗑️ Clear effectué - Signal envoyé dans le notifications-stream")
     
     return {
         "status": "success",
-        "message": "Toutes les notifications ont été supprimées avec succès.",
-        notification_clear_pending
+        "message": "Toutes les notifications ont été supprimées avec succès."
     }
