@@ -172,5 +172,6 @@ async def clear_all_notifications(password: str = Query(..., description="Mot de
     
     return {
         "status": "success",
-        "message": "Toutes les notifications ont été supprimées avec succès."
+        "message": "Toutes les notifications ont été supprimées avec succès.",
+        notification_clear_pending
     }
