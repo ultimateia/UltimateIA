@@ -26,9 +26,11 @@ if not CLEAR_PASSWORD:
 # Variables globales
 latest_position = None
 positions_history = []
-
-# Variable pour les notifications (dernière notification)
 latest_notification = None
+
+# Variable pour gérer le clear dans le stream
+clear_pending = False
+
 
 @app.post("/api/position")
 async def receive_position(data: dict):
@@ -41,13 +43,30 @@ async def receive_position(data: dict):
     return {"status": "ok"}
 
 
+@app.get("/api/position")
+async def get_latest():
+    return latest_position or {"status": "no_data_yet"}
+
+
+# ====================== STREAM POSITION ======================
 @app.get("/api/position-stream")
 async def position_stream(request: Request):
+    global clear_pending
+    
     async def event_generator():
+        global clear_pending
         while True:
             if await request.is_disconnected():
                 break
             
+            # Si un clear est en attente, on l'envoie en priorité
+            if clear_pending:
+                yield f"data: {json.dumps({'type': 'clear'})}\n\n"
+                clear_pending = False
+                await asyncio.sleep(0.5)
+                continue
+            
+            # Envoi normal de la dernière position en boucle
             if latest_position:
                 yield f"data: {json.dumps({'type': 'position', 'data': latest_position})}\n\n"
             else:
@@ -58,7 +77,7 @@ async def position_stream(request: Request):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-# ====================== NOTIFICATIONS (même principe que position) ======================
+# ====================== NOTIFICATIONS ======================
 @app.post("/api/notifications")
 async def send_notification(notif: dict):
     global latest_notification
@@ -82,5 +101,43 @@ async def notifications_stream(request: Request):
                 yield f"data: {json.dumps({'type': 'no_notification'})}\n\n"
             
             await asyncio.sleep(1)
-    
+   
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.get("/api/positions/history")
+async def get_positions_history():
+    return {
+        "positions": positions_history,
+        "count": len(positions_history)
+    }
+
+
+@app.api_route("/ping", methods=["GET", "HEAD"])
+async def ping():
+    return {"status": "alive", "time": datetime.utcnow().isoformat()}
+
+
+# ====================== ROUTE CLEAR ======================
+@app.delete("/api/positions/clear")
+@app.get("/api/positions/clear")
+async def clear_all_positions(password: str = Query(..., description="Mot de passe requis")):
+    if not CLEAR_PASSWORD:
+        raise HTTPException(status_code=500, detail="Configuration du mot de passe manquante")
+  
+    if password != CLEAR_PASSWORD:
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+  
+    global latest_position, positions_history, latest_notification, clear_pending
+    
+    latest_position = None
+    positions_history.clear()
+    latest_notification = None
+    clear_pending = True          # ← Important : active le clear dans le stream
+    
+    print("🗑️ Clear effectué - Signal envoyé dans le position-stream")
+    
+    return {
+        "status": "success",
+        "message": "Toutes les positions ont été supprimées avec succès."
+    }
