@@ -164,6 +164,7 @@ async def clear_all_notifications(password: str = Query(..., description="Mot de
     global latest_notification
     
     latest_notification = None
+    notification_clear_pending = True
     
     print("🗑️ Clear effectué - Signal envoyé dans le notifications-stream")
     
