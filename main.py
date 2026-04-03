@@ -102,7 +102,7 @@ async def notifications_stream(request: Request):
             # Si un clear est en attente, on l'envoie en priorité
             if notification_clear_pending:
                 yield f"data: {json.dumps({'type': 'clear'})}\n\n"
-                clear_pending = False
+                notification_clear_pending = False
                 await asyncio.sleep(0.5)
                 continue
             
