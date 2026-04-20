@@ -95,10 +95,11 @@ async def send_notification(notif: dict):
         notif["id"] = latest_notification["id"]+1
     else:
         notif["id"] = 0
-    notif["seen"] = []                          # Liste vide pour les utilisateurs qui ont vu la notif
+    notif["seen"] = []                         
     notif["timestamp"] = datetime.utcnow().isoformat()
     
     latest_notification = notif
+    notification_history.append(notif)
     
     print(f"🔔 Notification envoyée → ID: {notif['id']} | Message: {notif.get('message')}")
     
