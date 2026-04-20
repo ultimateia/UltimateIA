@@ -108,6 +108,39 @@ async def send_notification(notif: dict):
         "notification_id": notif["id"]
     }
 
+# ====================== MARQUER UNE NOTIFICATION COMME VUE ======================
+@app.post("/api/notifications/{notification_id}/seen")
+async def mark_notification_as_seen(notification_id: int, user: dict):
+    """Ajoute un utilisateur dans la liste 'seen' d'une notification de l'historique"""
+    
+    # Recherche de la notification dans l'historique
+    notification = next((n for n in notifications_history if n.get("id") == notification_id), None)
+    
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification non trouvée")
+    
+    if "seen" not in notification:
+        notification["seen"] = []
+    
+    new_entry = {
+        "user_id": user.get("user_id"),
+        "username": user.get("username", "unknown"),
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    # Évite les doublons
+    if not any(entry.get("user_id") == user.get("user_id") for entry in notification["seen"]):
+        notification["seen"].append(new_entry)
+        print(f"👁️ Notification {notification_id} marquée comme vue par {user.get('username')}")
+    else:
+        print(f"Notification {notification_id} déjà vue par cet utilisateur")
+    
+    return {
+        "status": "success",
+        "message": f"Notification {notification_id} marquée comme vue",
+        "seen_count": len(notification["seen"])
+    }
+
 # ====================== STREAM NOTIFICATIONS ======================
 @app.get("/api/notifications-stream")
 async def notifications_stream(request: Request):
