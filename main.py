@@ -27,6 +27,7 @@ if not CLEAR_PASSWORD:
 latest_position = None
 positions_history = []
 latest_notification = None
+notification_history = []
 
 # Variable pour gérer le clear dans le stream
 clear_pending = False
@@ -77,15 +78,34 @@ async def position_stream(request: Request):
 
 
 # ====================== NOTIFICATIONS ======================
-@app.post("/api/notifications")
+# @app.post("/api/notification")
+# async def send_notification(notif: dict):
+#     global latest_notification
+#     notif["timestamp"] = datetime.utcnow().isoformat()
+#     latest_notification = notif
+    
+#     print(f"🔔 Notification envoyée : {notif.get('message')}")
+#     return {"status": "sent"}
+
+@app.post("/api/notification")
 async def send_notification(notif: dict):
     global latest_notification
+    
+    if latest_notification:
+        notif["id"] = latest_notification["id"]+1
+    else:
+        notif["id"] = 0
+    notif["seen"] = []                          # Liste vide pour les utilisateurs qui ont vu la notif
     notif["timestamp"] = datetime.utcnow().isoformat()
+    
     latest_notification = notif
     
-    print(f"🔔 Notification envoyée : {notif.get('message')}")
-    return {"status": "sent"}
-
+    print(f"🔔 Notification envoyée → ID: {notif['id']} | Message: {notif.get('message')}")
+    
+    return {
+        "status": "sent",
+        "notification_id": notif["id"]
+    }
 
 # ====================== STREAM NOTIFICATIONS ======================
 @app.get("/api/notifications-stream")
