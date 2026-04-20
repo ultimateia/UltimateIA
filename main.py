@@ -27,7 +27,7 @@ if not CLEAR_PASSWORD:
 latest_position = None
 positions_history = []
 latest_notification = None
-notification_history = []
+notifications_history = []
 
 # Variable pour gérer le clear dans le stream
 clear_pending = False
@@ -99,7 +99,7 @@ async def send_notification(notif: dict):
     notif["timestamp"] = datetime.utcnow().isoformat()
     
     latest_notification = notif
-    notification_history.append(notif)
+    notifications_history.append(notif)
     
     print(f"🔔 Notification envoyée → ID: {notif['id']} | Message: {notif.get('message')}")
     
