@@ -129,7 +129,7 @@ async def mark_notification_as_seen(notification_id: int, user: dict):
     """Ajoute un utilisateur dans la liste 'seen' d'une notification de l'historique"""
     
     # Recherche de la notification dans l'historique
-    notification = next((n for n in notifications_history.notif if n.get("id") == notification_id), None)
+    notification = next((n for n in notifications_history["notif"] if n.get("id") == notification_id), None)
     
     if not notification:
         raise HTTPException(status_code=404, detail="Notification non trouvée")
