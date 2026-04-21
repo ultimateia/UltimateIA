@@ -111,8 +111,10 @@ async def send_notification(notif: dict):
 async def add_notification_to_history(notif: dict):
     if notif not in notifications_history:
         notifications_history.append(notif)
+        print(notif)
+        print(notifications_history)
     else:
-        return
+        print("already exists")
 
 @app.get("/api/notifications/history")
 async def get_notifications_history():
