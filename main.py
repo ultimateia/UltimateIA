@@ -132,6 +132,7 @@ async def mark_notification_as_seen(notification_id: int, user: dict):
     if not any(entry.get("user_id") == user.get("user_id") for entry in notification["seen"]):
         notification["seen"].append(new_entry)
         print(f"👁️ Notification {notification_id} marquée comme vue par {user.get('username')}")
+        print(notifications)
     else:
         print(f"Notification {notification_id} déjà vue par cet utilisateur")
     
