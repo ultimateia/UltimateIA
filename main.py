@@ -99,7 +99,6 @@ async def send_notification(notif: dict):
     notif["timestamp"] = datetime.utcnow().isoformat()
     
     latest_notification = notif
-    notifications_history.append(notif)
     
     print(f"🔔 Notification envoyée → ID: {notif['id']} | Message: {notif.get('message')}")
     
@@ -107,6 +106,10 @@ async def send_notification(notif: dict):
         "status": "sent",
         "notification_id": notif["id"]
     }
+
+@app.get("/api/notification/add-to-history")
+async def add_notification_to_history(notif: dict):
+    notifications_history.append(notif)
 
 @app.get("/api/notifications/history")
 async def get_notifications_history():
