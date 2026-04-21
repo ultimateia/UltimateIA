@@ -111,6 +111,13 @@ async def send_notification(notif: dict):
 # ====================== MARQUER UNE NOTIFICATION COMME VUE ======================
 @app.post("/api/notifications/{notification_id}/seen")
 async def mark_notification_as_seen(notification_id: int, user: dict):
+    print("AVANT:", notification.get("seen", []))
+
+    if not any(entry.get("user_id") == user.get("user_id") for entry in notification["seen"]):
+        notification["seen"].append(new_entry)
+    
+    print("APRÈS:", notification["seen"])
+    
     """Ajoute un utilisateur dans la liste 'seen' d'une notification de l'historique"""
     
     # Recherche de la notification dans l'historique
