@@ -109,7 +109,10 @@ async def send_notification(notif: dict):
 
 @app.get("/api/notification/add-to-history")
 async def add_notification_to_history(notif: dict):
-    notifications_history.append(notif)
+    if notif not in notifications_history:
+        notifications_history.append(notif)
+    else:
+        return
 
 @app.get("/api/notifications/history")
 async def get_notifications_history():
