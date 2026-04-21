@@ -108,6 +108,13 @@ async def send_notification(notif: dict):
         "notification_id": notif["id"]
     }
 
+@app.get("/api/notifications/history")
+async def get_notifications_history():
+    return {
+        "notifications": notifications_history,
+        "count": len(notifications_history)
+    }
+
 # ====================== MARQUER UNE NOTIFICATION COMME VUE ======================
 @app.post("/api/notifications/{notification_id}/seen")
 async def mark_notification_as_seen(notification_id: int, user: dict):    
@@ -168,7 +175,6 @@ async def get_positions_history():
         "positions": positions_history,
         "count": len(positions_history)
     }
-
 
 @app.api_route("/ping", methods=["GET", "HEAD"])
 async def ping():
