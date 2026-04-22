@@ -131,7 +131,7 @@ async def mark_notification_as_seen(notification_id: int, user: dict):
     # Recherche de la notification dans l'historique
     print(notifications_history)
     print("-----------")
-    print(dict(notifications_history)
+    print(dict(notifications_history))
     notification = next((n for n in dict(notifications_history)["notif"] if n.get("id") == notification_id), None)
     
     if not notification:
