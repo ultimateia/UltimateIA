@@ -125,35 +125,34 @@ async def get_notifications_history():
 
 # ====================== MARQUER UNE NOTIFICATION COMME VUE ======================
 @app.post("/api/notifications/{notification_id}/seen")
-async def mark_notification_as_seen(notification_id: int, user: dict):    
-    """Ajoute un utilisateur dans la liste 'seen' d'une notification de l'historique"""
-    
-    # Recherche de la notification dans l'historique
+async def mark_notification_as_seen(notification_id: int, user: dict):
+
     print(notifications_history)
     print("-----------")
-    print(dict(notifications_history))
-    notification = next((n for n in dict(notifications_history)["notif"] if n.get("id") == notification_id), None)
-    
+
+    notification = next(
+        (n for n in notifications_history if n.get("id") == notification_id),
+        None
+    )
+
     if not notification:
         raise HTTPException(status_code=404, detail="Notification non trouvée")
-    
+
     if "seen" not in notification:
         notification["seen"] = []
-    
+
     new_entry = {
         "user_id": user.get("user_id"),
         "username": user.get("username", "unknown"),
         "timestamp": datetime.utcnow().isoformat()
     }
-    
-    # Évite les doublons
+
     if not any(entry.get("user_id") == user.get("user_id") for entry in notification["seen"]):
         notification["seen"].append(new_entry)
         print(f"👁️ Notification {notification_id} marquée comme vue par {user.get('username')}")
-        print(notification)
     else:
         print(f"Notification {notification_id} déjà vue par cet utilisateur")
-    
+
     return {
         "status": "success",
         "message": f"Notification {notification_id} marquée comme vue",
