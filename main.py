@@ -27,7 +27,7 @@ if not CLEAR_PASSWORD:
 latest_position = None
 positions_history = []
 latest_notification = None
-notifications_history = []
+notifications_history = {}
 
 # Variable pour gérer le clear dans le stream
 clear_pending = False
@@ -89,32 +89,36 @@ async def position_stream(request: Request):
 
 @app.post("/api/notification")
 async def send_notification(notif: dict):
-    global latest_notification
-    
+    global latest_notification, notifications_history
+
     if latest_notification:
-        notif["id"] = latest_notification["id"]+1
+        notif["id"] = latest_notification["id"] + 1
     else:
         notif["id"] = 0
-    notif["seen"] = []                         
+
+    notif["seen"] = []
     notif["timestamp"] = datetime.utcnow().isoformat()
-    
+
     latest_notification = notif
-    
-    print(f"🔔 Notification envoyée → ID: {notif['id']} | Message: {notif.get('message')}")
-    
+
+    # ✅ ajout direct dans le dict
+    notifications_history[notif["id"]] = notif
+
+    print(f"🔔 Notification envoyée → ID: {notif['id']}")
+
     return {
         "status": "sent",
         "notification_id": notif["id"]
     }
 
-@app.post("/api/notification/add-to-history")
-async def add_notification_to_history(notif: dict):
-    if notif not in notifications_history:
-        notifications_history.append(notif)
-        print(notif)
-        print(notifications_history)
-    else:
-        print("already exists")
+# @app.post("/api/notification/add-to-history")
+# async def add_notification_to_history(notif: dict):
+#     if notif not in notifications_history:
+#         notifications_history.append(notif)
+#         print(notif)
+#         print(notifications_history)
+#     else:
+#         print("already exists")
 
 @app.get("/api/notifications/history")
 async def get_notifications_history():
