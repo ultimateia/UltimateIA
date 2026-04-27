@@ -134,10 +134,7 @@ async def mark_notification_as_seen(notification_id: int, user: dict):
     print(notifications_history)
     print("-----------")
 
-    notification = next(
-        (n for n in notifications_history if n.get("id") == notification_id),
-        None
-    )
+    notification = notifications_history.get(notification_id)
 
     if not notification:
         raise HTTPException(status_code=404, detail="Notification non trouvée")
